@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -27,6 +28,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.packt.webstore.domain.Product;
 import com.packt.webstore.service.ProductService;
+import com.packt.webstore.validator.ProductValidator;
 
 import exception.NoProductsFoundUnderCategoryException;
 import exception.ProductNotFoundException;
@@ -36,6 +38,8 @@ import exception.ProductNotFoundException;
 public class ProductController {
 	@Autowired
 	private ProductService productService;
+	@Autowired
+	private ProductValidator productValidator;
 	
 	@RequestMapping
 	public String list(Model model){
@@ -97,7 +101,11 @@ public class ProductController {
 	}
 	
 	@RequestMapping(value="/add", method= RequestMethod.POST)
-	public String processAddNewProductForm(@ModelAttribute("newProduct") Product productToBeAdded, BindingResult result, HttpServletRequest request){
+	public String processAddNewProductForm(@ModelAttribute("newProduct") @Valid Product productToBeAdded, BindingResult result, HttpServletRequest request){
+		if(result.hasErrors()) {
+			return "addProduct";
+			}
+		
 		String[] suppressedFields = result.getSuppressedFields();
 		if(suppressedFields.length >0){
 			throw new RuntimeException("Attempting to bind disallowed fields: "+ StringUtils.arrayToCommaDelimitedString(suppressedFields));
@@ -129,6 +137,7 @@ public class ProductController {
 	public void initialiseBinder(WebDataBinder binder){
 		binder.setDisallowedFields("unitsInOrder", "discontinued");
 		binder.setAllowedFields("productId","name","unitPrice","description","manufacturer","category","unitsInStock","condition", "productImage", "productManual", "language");
+		binder.setValidator(productValidator);
 	}
 	
 	@ExceptionHandler(ProductNotFoundException.class)
