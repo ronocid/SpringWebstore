@@ -15,6 +15,7 @@
 				</div>
 			</div>
 		</section>
+		
 		<section class="container">
 			<div class="row">
 				<c:forEach items="${products}" var="product">
